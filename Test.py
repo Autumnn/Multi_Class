@@ -28,38 +28,6 @@ with open(dir, "r") as get_info:
             break
 
 
-global Num_Samples
-Num_Samples = Num_lines - data_info_lines
-print(Num_Samples)
-global Num_Features
-Num_Features = num_columns - 1
-
-global Features
-Features = np.ones((Num_Samples, Num_Features))
-global Labels
-Labels = np.ones((Num_Samples, 1))
-
-with open(dir, "r") as data_file:
-    print("Read Data", data_file.name)
-    l = 0
-    for line in data_file:
-        l += 1
-        if l > data_info_lines:
-            # print(line)
-            row = line.split(",")
-            length_row = len(row)
-            # print('Row length',length_row)
-            # print(row[0])
-            #print(l)
-            for i in range(length_row):
-                if i < length_row - 1:
-                    if row[i] == '<null>':
-                        row[i] = 0
-                    Features[l - data_info_lines - 1][i] = row[i]
-                    # print(Features[l-14][i])
-                else:
-                    label = class_label.index(row[i].strip())+1
-                    Labels[l - data_info_lines - 1][0] = label
 
 
 
