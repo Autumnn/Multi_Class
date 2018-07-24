@@ -15,7 +15,7 @@ for Dir in dirs:
     dir_path = path + "/" + Dir
     files = os.listdir(dir_path)  # Get files in the folder
 
-    methods = ["AdaBoost-DT", "SMOTE-AdaBoost-DT", "DESlib"]
+    methods = ["AdaBoost-DT", "SMOTE-AdaBoost-DT", "META-DES", "MCB"]
     for m in methods:
         print('Method: ', m)
         Num_Cross_Folders = 5
@@ -48,19 +48,18 @@ for Dir in dirs:
                                          algorithm='SAMME', n_estimators=200, learning_rate=0.8)
                 bdt.fit(Feature_train_o, Label_train_o)
                 Label_predict = bdt.predict(Feature_test)
-            elif m == 'DESlib':
+            elif m == 'META-DES':
                 pool_classifiers = RandomForestClassifier(n_estimators=10)
                 pool_classifiers.fit(Feature_train, Label_train.ravel())
-                # Initialize the DS model
-                #metades = METADES(pool_classifiers)
+                metades = METADES(pool_classifiers)
+                metades.fit(Feature_train, Label_train.ravel())
+                Label_predict = metades.predict(Feature_test)
+            elif m == 'MCB':
+                pool_classifiers = RandomForestClassifier(n_estimators=10)
+                pool_classifiers.fit(Feature_train, Label_train.ravel())
                 mcb = MCB(pool_classifiers)
-                # Preprocess the Dynamic Selection dataset (DSEL)
-                #metades.fit(X_dsel, y_dsel)
                 mcb.fit(Feature_train, Label_train.ravel())
-                # Predict new examples:
-                #metades.predict(X_test)
                 Label_predict = mcb.predict(Feature_test)
-
 
             ml_record.measure(i, Label_test, Label_predict, 'weighted')
             i += 1
