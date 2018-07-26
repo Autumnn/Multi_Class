@@ -4,6 +4,7 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from deslib.dcs.mcb import MCB
 from deslib.des.meta_des import METADES
+from deslib.des.des_MI import DESMI
 from imblearn.over_sampling import SMOTE
 from metrics_list import MetricList
 
@@ -15,7 +16,7 @@ for Dir in dirs:
     dir_path = path + "/" + Dir
     files = os.listdir(dir_path)  # Get files in the folder
 
-    methods = ["AdaBoost-DT", "SMOTE-AdaBoost-DT", "META-DES", "MCB"]
+    methods = ["AdaBoost-DT", "SMOTE-AdaBoost-DT", "META-DES", "MCB", "DES-MI"]
     for m in methods:
         print('Method: ', m)
         Num_Cross_Folders = 5
@@ -60,6 +61,12 @@ for Dir in dirs:
                 mcb = MCB(pool_classifiers)
                 mcb.fit(Feature_train, Label_train.ravel())
                 Label_predict = mcb.predict(Feature_test)
+            elif m == 'DES-MI':
+                pool_classifiers = RandomForestClassifier(n_estimators=10)
+                pool_classifiers.fit(Feature_train, Label_train.ravel())
+                dmi = DESMI(pool_classifiers)
+                dmi.fit(Feature_train, Label_train.ravel())
+                Label_predict = dmi.predict(Feature_test)
 
             ml_record.measure(i, Label_test, Label_predict, 'weighted')
             i += 1

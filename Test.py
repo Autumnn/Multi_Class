@@ -1,26 +1,30 @@
-import pandas as pd
 import numpy as np
-from imblearn.over_sampling import SMOTE
+from sklearn.preprocessing import normalize
 
-name = 'KEEL_Cross_Folder_npz/yeast/yeast_1_Cross_Folder.npz'
-r = np.load(name)
-
-Feature_train = r['F_tr']
-Label_train = r['L_tr']
-Num_train = Feature_train.shape[0]
-# print(Num_train)
-Feature_test = r['F_te']
-Label_test = r['L_te']
-Label_test.ravel()
-Num_test = Feature_test.shape[0]
-# print(Num_test)
-
-df = pd.DataFrame(Label_train)
-print(df[0].value_counts())
-
-'''
-show = np.concatenate((Feature_train, Label_train), axis=1)
-sm = SMOTE()
-Feature_train_o, Label_train_o = sm.fit_sample(Feature_train, Label_train.ravel())
-Label_train_o = Label_train_o[:,np.newaxis]
-'''
+target = np.array([1,1,2,0,1,2,0,1,2])
+idx_neighbors = np.random.randint(0,9,(4,7))
+frequency = np.bincount(target)
+neighbour_label = target[idx_neighbors]
+print(target)
+print(idx_neighbors)
+#print(neighbour_label)
+#print(frequency)
+#print(frequency[neighbour_label])
+num = frequency[neighbour_label]
+weight = 1./(1 + np.exp(0.9 * num))
+#print(weight)
+weight = normalize(weight, norm='l1')
+print(weight)
+print(np.sum(weight,axis=1))
+processed_dsel = np.random.randint(0,2,(9,5))
+#print(processed_dsel)
+correct_num = processed_dsel[idx_neighbors, :]
+print(correct_num)
+correct = np.zeros((4, 7, 5))
+for i in range(5):
+    correct[:,:,i] = correct_num[:,:,i] * weight
+print(correct)
+accuracy = np.mean(correct, axis=1)
+print(accuracy)
+competent_indices = np.argsort(accuracy, axis=1)[:, ::-1][:, 0:2]
+print(competent_indices)
