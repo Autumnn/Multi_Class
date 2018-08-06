@@ -73,7 +73,7 @@ for Dir in DIRS:
                                      {'max_depth': (5, 10),
                                       'learning_rate': (0.01, 0.3),
                                       'n_estimators': (50, 1000),
-                                      'gamma': (1., 0.01),
+                                      'gamma': (0.01, 1.),
                                       'min_child_weight': (2, 10),
                                       'max_delta_step': (0, 0.1),
                                       'subsample': (0.7, 0.8),
