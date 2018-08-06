@@ -35,6 +35,15 @@ class MetricList:
 #        i = i_folder
 #        self.AUC[i] = metrics.roc_auc_score(Label_test, Label_score, average=average)
 
+    def mean_accuracy(self):
+        return np.mean(self.Accuracy[:])
+
+    def mean_G(self):
+        return np.mean(self.G_Mean[:])
+
+    def mean_F(self):
+        return np.mean(self.F_Mean[:])
+
     def output(self, name, method, dir):
         accuracy = np.mean(self.Accuracy[:])
         precision = np.mean(self.Precision[:])
