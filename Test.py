@@ -1,57 +1,45 @@
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
-from sklearn.neighbors import KNeighborsClassifier
+import os
+import json
 
-y = ['A','A','B','C','A','B','C','A','B']
-print(y)
-enc = LabelEncoder()
-y_ind = enc.fit_transform(y)
-print(y_ind)
-print(enc.classes_)
 
-#target = np.array([0,0,1,2,0,1,2,0,1])
-target = y_ind
-predictions = np.random.randint(0,3,(9,5))
-print(predictions)
-print(predictions[:,1:])
-BKS_dsel = predictions
-processed_dsel = BKS_dsel == target[:, np.newaxis]
-print(processed_dsel)
-idx_neighbors = np.random.randint(0,8,(9,3))
-print(idx_neighbors)
+path = "KEEL_Cross_Folder_npz"
+dirs = os.listdir(path) #Get files in the folder
 
-f_1 = processed_dsel[idx_neighbors,:].swapaxes(1,2).reshape(-1,3)
-print(f_1)
+for Dir in dirs:
+    Esemble_Path = 'KEEL_Cross_Folder_XGBoost_Para_From_GA_Esemble'
+    Esemble_File = Dir + '_Esemble.json'
+    Esemble_Dir = Esemble_Path + "/" + Esemble_File
+    with open(Esemble_Dir, 'r') as Esemble_data:
+        Esemble_Parameters = json.load(Esemble_data)
 
-pct_agree = np.sum(processed_dsel,axis=1)/5
-print(pct_agree)
-Hc = 0.9
-print(np.where(Hc > pct_agree)[0])
-print(np.where(pct_agree > (1-Hc))[0])
-indices_selected = np.hstack((np.where(Hc > pct_agree)[0],np.where(pct_agree > (1-Hc))[0]))
-print(indices_selected)
-indices_selected = np.unique(indices_selected)
-print(indices_selected)
+    print(str(Dir))
+    print(len(Esemble_Parameters))
+    print(Esemble_Parameters)
 
-dsel_scores = np.random.rand(9,5,3)
-f_2 = dsel_scores[idx_neighbors, :, target[idx_neighbors]].swapaxes(1, 2)
-f_2 = f_2.reshape(-1, 3)
-print(f_2)
+    sorted_metric_values = sorted(Esemble_Parameters.keys(), reverse=True)
+    pool_classifiers = []
+    for i in range(3):
+        metric_value = sorted_metric_values[i]
+        parameters = Esemble_Parameters[metric_value]
+        
+        parameters['silent'] = True
+        parameters['nthread'] = -1
+        parameters['seed'] = 1234
+        #    BayesOp_Parameters['objective'] = "multi:softprob"
+        parameters['max_depth'] = int(parameters['max_depth'])
+        parameters['n_estimators'] = int(parameters['n_estimators'])
+        pool_classifiers.append(xgboost.XGBClassifier(**parameters))
+    if len(pool_classifiers) < 3:
+        for j in range(3 - len(pool_classifiers)):
+            pool_classifiers.append(pool_classifiers[j])
 
-print(processed_dsel[idx_neighbors, :])
-f_3 = np.mean(processed_dsel[idx_neighbors, :], axis=1)
-print(f_3)
-f_3 = f_3.reshape(-1, 1)
-print(f_3)
 
-print(np.hstack((f_1, f_2, f_3)))
-
+    pool_classifiers = []
+    for metric_value, parameters in Esemble_Parameters.items():
+        parameters['silent'] = True
+        parameters['nthread'] = -1
+        parameters['seed'] = 1234
+        #    BayesOp_Parameters['objective'] = "multi:softprob"
+        parameters['max_depth'] = int(parameters['max_depth'])
+        parameters['n_estimators'] = int(parameters['n_estimators'])
 '''
-dsel_output_profiles = dsel_scores.reshape(9, 5*3)
-print(dsel_output_profiles)
-op_knn = KNeighborsClassifier(n_neighbors=3, n_jobs=1, algorithm='auto')
-op_knn.fit(dsel_output_profiles, y_ind)
-'''
-
-meta_feature_target = processed_dsel[indices_selected, :].reshape(-1,)
-print(meta_feature_target)

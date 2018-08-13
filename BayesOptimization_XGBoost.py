@@ -80,11 +80,16 @@ for Dir in DIRS:
                                       'colsample_bytree': (0.5, 0.99)
                                       })
 
-    xgboostBO.maximize()
+    xgboostBO.maximize(init_points=20, n_iter=120)
+    #    xgboostBO.maximize()
 
     print('-' * 53)
     print('Final Results')
-    print('SVC: %f Parameters: %s' % (xgboostBO.res['max']['max_val'], xgboostBO.res['max']['max_params']))
+    print('XGBoost: %f Parameters: %s' % (xgboostBO.res['max']['max_val'], xgboostBO.res['max']['max_params']))
+
+    with open('BayesOpt_G_Mean.txt', 'a') as w:
+        line = Dir + '\t' + str(xgboostBO.res['max']['max_val']) + '\n'
+        w.write(line)
 
     with open(Dir + '.json', 'a') as outfile:
         json.dump(xgboostBO.res['max']['max_params'], outfile, ensure_ascii=False)
