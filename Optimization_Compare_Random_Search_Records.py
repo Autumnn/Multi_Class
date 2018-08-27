@@ -4,15 +4,15 @@ import xgboost
 import json
 import warnings
 from metrics_list import MetricList
-from bayes_opt import BayesianOptimization
-
+from datetime import datetime
+from print_log import PrintLog
 
 warnings.filterwarnings('ignore')
-PATH = "KEEL_Cross_Folder_npz"
+PATH = "KEEL_Cross_Folder_npz_S"
 DIRS = os.listdir(PATH)         #   Get files in the folder
 
 
-def xgboostcv(max_depth,
+def evaluation(max_depth,
               learning_rate,
               n_estimators,
               gamma,
@@ -22,8 +22,7 @@ def xgboostcv(max_depth,
               colsample_bytree,
               silent =True,
               nthread = -1,
-              seed = 1234,
-              ):
+              seed = 1234,):
     Num_Cross_Folders = 5
     ml_record = MetricList(Num_Cross_Folders)
     i = 0
@@ -59,52 +58,57 @@ def xgboostcv(max_depth,
         ml_record.measure(i, Label_test, Label_predict, 'weighted')
         i += 1
 
-
     return ml_record.mean_G()
 
+
+parameters_bounds = {'max_depth': (5, 10),         # int
+              'learning_rate': (0.01, 0.3),
+              'n_estimators': (50, 1000),       #int
+              'gamma': (0.01, 1.),
+              'min_child_weight': (2, 10),
+              'max_delta_step': (0, 0.1),
+              'subsample': (0.7, 0.8),
+              'colsample_bytree': (0.5, 0.99)}
+
+def random_search(f, para_b, num):
+    begin_time = datetime.now()
+    Timestamps_list = []
+    Target_list = []
+    keys = list(para_b.keys())
+    bounds = np.array(list(para_b.values()), dtype=np.float)
+    dim = len(keys)
+    plog = PrintLog(keys)
+    parameters = np.empty((num, dim))
+    plog.print_header(initialization=True)
+    for col, (lower, upper) in enumerate(bounds):
+        parameters.T[col] = np.random.RandomState().uniform(lower, upper, size=num)
+    plog.print_header(initialization=False)
+
+    for i in range(num):
+        params_dic = dict(zip(keys, parameters[i]))
+        metric = f(**params_dic)
+        Target_list.append(metric)
+        elapse_time = (datetime.now() - begin_time).total_seconds()
+        Timestamps_list.append(elapse_time)
+        plog.print_step(parameters[i], metric)
+
+    return Timestamps_list, Target_list, parameters.tolist()
 
 
 for Dir in DIRS:
     print("Data Set Name: ", Dir)
     dir_path = PATH + "/" + Dir
     files = os.listdir(dir_path)  # Get files in the folder
+    time_list, target_list, para_list = random_search(evaluation, parameters_bounds, 1000)
 
-    xgboostBO = BayesianOptimization(xgboostcv,
-                                     {'max_depth': (5, 10),
-                                      'learning_rate': (0.01, 0.3),
-                                      'n_estimators': (50, 1000),
-                                      'gamma': (0.01, 1.),
-                                      'min_child_weight': (2, 10),
-                                      'max_delta_step': (0, 0.1),
-                                      'subsample': (0.7, 0.8),
-                                      'colsample_bytree': (0.5, 0.99)
-                                      })
-
-    xgboostBO.maximize(init_points=50, n_iter=200)
-    # csv_file = Dir + '.csv'
-    # xgboostBO.points_to_csv(csv_file)
-    #    xgboostBO.maximize()
-
-    print('-' * 53)
-    print('Final Results')
-    print('XGBoost: %f Parameters: %s' % (xgboostBO.res['max']['max_val'], xgboostBO.res['max']['max_params']))
-
-    with open('BayesOpt_G_Mean.txt', 'a') as w:
-        line = Dir + '\t' + str(xgboostBO.res['max']['max_val']) + '\n'
-        w.write(line)
-
-    with open(Dir + '.json', 'a') as outfile:
-        json.dump(xgboostBO.res['max']['max_params'], outfile, ensure_ascii=False)
-        outfile.write('\n')
-
-    time_list = xgboostBO.res['all']['timestamp']
-    target_list = xgboostBO.res['all']['values']
-    para_list = xgboostBO.res['all']['params']
     Output_Para = []
     for k, v in dict(zip(target_list, para_list)).items():
         Output_Para.append({k: v})
     Output_line = dict(zip(time_list, Output_Para))
-    with open(Dir + '_BA.json', 'a') as outfile:
+    with open(Dir + '_RA.json', 'a') as outfile:
         json.dump(Output_line, outfile, ensure_ascii=False)
         outfile.write('\n')
+
+
+
 

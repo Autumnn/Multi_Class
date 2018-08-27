@@ -26,8 +26,7 @@ def para_init(para_bounds_dic):
 
     para_data = np.asarray(para_data).ravel()
     parameter_value = para_data.tolist()
-#    assert para_data.size == dim
-#    parameter_value = dict(zip(keys, para_data))
+
     return parameter_value
 
 
@@ -47,20 +46,9 @@ creator.create('FitnessMax', base.Fitness, weights=(1.0,))
 creator.create('Individual', list, fitness=creator.FitnessMax)
 
 toolbox = base.Toolbox()
-# Individual generator
 toolbox.register("attr_bool", para_init, parameters)
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.attr_bool)
-# Population initializers
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-
-'''
-toolbox = base.Toolbox()
-# Attribute generator
-toolbox.register("attr_bool", random.randint, 0, 1)
-# Structure initializers
-toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, 100)
-toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-'''
 
 def evaluate(individual):
     keys = list(parameters.keys())
@@ -89,7 +77,6 @@ def evaluate(individual):
     Num_Cross_Folders = 5
     ml_record = MetricList(Num_Cross_Folders)
     i = 0
-
     for file in files:
         name = dir_path + '/' + file
         r = np.load(name)
@@ -119,18 +106,33 @@ toolbox.register("select", tools.selTournament, tournsize=3) # select
 toolbox.register("evaluate", evaluate)
 
 def Genetic_Algorithm():
-    pop = toolbox.population(n=60)
-    CXPB, MUTPB, NGEN = 0.5, 0.2, 10
+    all_res = {'values': [], 'params': [], 'timestamp': []}
+    pop = toolbox.population(n=50)
+    CXPB, MUTPB, NGEN = 0.5, 0.2, 60
     plog.print_header(initialization=True)
 
     fitnesses = list(map(toolbox.evaluate, pop))
     print('start')
+    ini_para = {}
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
+        ini_para[fit[0]] = ind
         plog.print_step(ind, fit[0])
 
-    plog.reset_timer()
-    plog.print_header(initialization=False)
+    best_ini = tools.selBest(pop, 1)[0]
+    all_res['values'].append(best_ini.fitness.values[0])
+    all_res['params'].append(best_ini)
+
+#    plog.reset_timer()
+#    plog.print_header(initialization=False)
+    elapse_time = plog.record_time()
+    all_res['timestamp'].append(elapse_time)
+
+    opt_para = {}
+    metric_value_list = {i: list(ini_para.keys())[i] for i in range(0, len(ini_para))}
+    for key_value in metric_value_list:
+        opt_para[key_value] = ini_para[metric_value_list[key_value]]
+
     print("  Evaluated %i individuals" % len(pop))
     print("-- Iterative %i times --" % NGEN)
 
@@ -160,16 +162,38 @@ def Genetic_Algorithm():
         fitnesses = map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
+            min_metric_value = min(metric_value_list, key=metric_value_list.get)
+            if fit[0] > metric_value_list[min_metric_value]:
+                change = True
+                existing_para = []
+                for k, v in metric_value_list.items():
+                    if fit[0] == v:
+                        existing_para.append(k)
+                if len(existing_para) > 0:
+                    for index in existing_para:
+                        if opt_para[index] == ind:
+                            change = False
+                if change:
+                    metric_value_list[min_metric_value] = fit[0]
+                    opt_para[min_metric_value] = ind
+
+
             plog.print_step(ind, fit[0])
-            plog.reset_timer()
+#            plog.reset_timer()
 
         # The population is entirely replaced by the offspring
         pop[:] = offspring
 
+        best_gen = tools.selBest(pop, 1)[0]
+        all_res['values'].append(best_gen.fitness.values[0])
+        all_res['params'].append(best_gen)
+        elapse_time = plog.record_time()
+        all_res['timestamp'].append(elapse_time)
+
     print("-- End of (successful) evolution --")
     best_ind = tools.selBest(pop, 1)[0]
-    return best_ind, best_ind.fitness.values  # return the result:Last individual,The Return of Evaluate function
-
+    # return the result:Last individual,The Return of Evaluate function, The best metric values list and their corresponding parameters.
+    return best_ind, best_ind.fitness.values, metric_value_list, opt_para, all_res
 
 for Dir in DIRS:
     print("Data Set Name: ", Dir)
@@ -177,7 +201,7 @@ for Dir in DIRS:
     files = os.listdir(dir_path)  # Get files in the folder
     plog = PrintLog(para_keys)
 
-    max_params, max_val = Genetic_Algorithm()
+    max_params, max_val, selected_metric_list, selected_optimal_parameters, res_records = Genetic_Algorithm()
     print('XGBoost:')
     print("best_values", max_val[0])
     print("best_parameters", max_params)
@@ -187,6 +211,17 @@ for Dir in DIRS:
         w.write(line)
 
     Output_Parameters = dict(zip(para_keys, max_params))
-    with open(Dir + '_GA.json', 'a') as outfile:
+    with open(Dir + '.json', 'a') as outfile:
         json.dump(Output_Parameters, outfile, ensure_ascii=False)
+        outfile.write('\n')
+
+    time_list = res_records['timestamp']
+    target_list = res_records['values']
+    para_list = res_records['params']
+    Output_line = {}
+    for i in range(len(target_list)):
+        Output_line[time_list[i]] = {target_list[i]: para_list[i]}
+        print(Output_line)
+    with open(Dir + '_GA.json', 'a') as outfile:
+        json.dump(Output_line, outfile, ensure_ascii=False)
         outfile.write('\n')

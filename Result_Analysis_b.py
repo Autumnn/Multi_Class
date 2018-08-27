@@ -1,7 +1,7 @@
 import numpy as np
 
 
-file = "Result_One_vs_All_GAOp_XGBoost_G_mean_Esemble_test.txt"
+file = "Result_One_vs_All_BayOp_XGBoost_G_mean_GA_99_pop.txt"
 i = 0
 with open(file, "r") as r:
     print(r.name)
@@ -47,7 +47,7 @@ with open(file, "r") as r:
 method_list = F_mean[temp].keys()
 print(method_list)
 
-file_write = "Result_One_vs_All_GAOp_XGBoost_G_mean_Esemble_test_Analysis.txt"
+file_write = "Result_One_vs_All_BayOp_XGBoost_G_mean_GA_99_pop_Analysis.txt"
 with open(file_write, 'a') as w:
     head_line = "Accuracy" + '\t' + '\t'.join(str(x) + '\t' for x in method_list) + '\n'
     w.write(head_line)

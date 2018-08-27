@@ -12,7 +12,8 @@ from print_log import PrintLog
 
 
 warnings.filterwarnings('ignore')
-PATH = "KEEL_Cross_Folder_npz"
+#PATH = "KEEL_Cross_Folder_Valid_npz"
+PATH = "KEEL_Cross_Folder_Valid_npz_S"
 DIRS = os.listdir(PATH)
 
 def para_init(para_bounds_dic):
@@ -62,6 +63,7 @@ toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.att
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 '''
 
+
 def evaluate(individual):
     keys = list(parameters.keys())
     dim = len(keys)
@@ -86,28 +88,28 @@ def evaluate(individual):
     #    BayesOp_Parameters['objective'] = "multi:softprob"
     BayesOp_Parameters['max_depth'] = int(BayesOp_Parameters['max_depth'])
     BayesOp_Parameters['n_estimators'] = int(BayesOp_Parameters['n_estimators'])
-    Num_Cross_Folders = 5
+
+    r = np.load(name)
+    Feature_train_list = r['F_tr_l']
+    Label_train_list = r['L_tr_l']
+    Feature_valid_list = r['F_va_l']
+    Label_valid_list = r['L_va_l']
+    Num_list = len(Feature_train_list)
+
+    Num_Cross_Folders = Num_list
     ml_record = MetricList(Num_Cross_Folders)
     i = 0
-
-    for file in files:
-        name = dir_path + '/' + file
-        r = np.load(name)
-
-        Feature_train = r['F_tr']
-        Label_train = r['L_tr']
-        Num_train = Feature_train.shape[0]
-        # print(Num_train)
-        Feature_test = r['F_te']
-        Label_test = r['L_te']
-        Label_test.ravel()
-        Num_test = Feature_test.shape[0]
-        # print(Num_test)
+    for j in range(Num_list):
+        Feature_train = Feature_train_list[j]
+        Label_train = Label_train_list[j]
+        Feature_valid = Feature_valid_list[j]
+        Label_valid = Label_valid_list[j]
+        Label_valid.ravel()
 
         xgb = xgboost.XGBClassifier(**BayesOp_Parameters)
         xgb.fit(Feature_train, Label_train.ravel())
-        Label_predict = xgb.predict(Feature_test)
-        ml_record.measure(i, Label_test, Label_predict, 'weighted')
+        Label_predict = xgb.predict(Feature_valid)
+        ml_record.measure(i, Label_valid, Label_predict, 'weighted')
         i += 1
 
     return ml_record.mean_G(),
@@ -120,7 +122,7 @@ toolbox.register("evaluate", evaluate)
 
 def Genetic_Algorithm():
     pop = toolbox.population(n=60)
-    CXPB, MUTPB, NGEN = 0.5, 0.2, 10
+    CXPB, MUTPB, NGEN = 0.5, 0.2, 20
     plog.print_header(initialization=True)
 
     fitnesses = list(map(toolbox.evaluate, pop))
@@ -129,7 +131,7 @@ def Genetic_Algorithm():
         ind.fitness.values = fit
         plog.print_step(ind, fit[0])
 
-    plog.reset_timer()
+#    plog.reset_timer()
     plog.print_header(initialization=False)
     print("  Evaluated %i individuals" % len(pop))
     print("-- Iterative %i times --" % NGEN)
@@ -161,7 +163,7 @@ def Genetic_Algorithm():
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
             plog.print_step(ind, fit[0])
-            plog.reset_timer()
+#            plog.reset_timer()
 
         # The population is entirely replaced by the offspring
         pop[:] = offspring
@@ -170,23 +172,29 @@ def Genetic_Algorithm():
     best_ind = tools.selBest(pop, 1)[0]
     return best_ind, best_ind.fitness.values  # return the result:Last individual,The Return of Evaluate function
 
-
 for Dir in DIRS:
     print("Data Set Name: ", Dir)
     dir_path = PATH + "/" + Dir
     files = os.listdir(dir_path)  # Get files in the folder
-    plog = PrintLog(para_keys)
+#    plog = PrintLog(para_keys)
 
-    max_params, max_val = Genetic_Algorithm()
-    print('XGBoost:')
-    print("best_values", max_val[0])
-    print("best_parameters", max_params)
+    for file in files:
+        name = dir_path + '/' + file
+        print("Data Set Folder: ", file)
+        plog = PrintLog(para_keys)
 
-    with open('GA_Opt_G_Mean.txt', 'a') as w:
-        line = Dir + '\t' + str(max_val[0]) + '\n'
-        w.write(line)
+        max_params, max_val = Genetic_Algorithm()
+        print('XGBoost:')
+        print("best_values", max_val[0])
+        print("best_parameters", max_params)
 
-    Output_Parameters = dict(zip(para_keys, max_params))
-    with open(Dir + '_GA.json', 'a') as outfile:
-        json.dump(Output_Parameters, outfile, ensure_ascii=False)
-        outfile.write('\n')
+        sub_name = file.split(".")[0]
+
+        with open('GA_Opt_G_Mean_Validation.txt', 'a') as w:
+            line = sub_name + '\t' + str(max_val[0]) + '\n'
+            w.write(line)
+
+        Output_Parameters = dict(zip(para_keys, max_params))
+        with open(sub_name + '_GA.json', 'a') as outfile:
+            json.dump(Output_Parameters, outfile, ensure_ascii=False)
+            outfile.write('\n')
