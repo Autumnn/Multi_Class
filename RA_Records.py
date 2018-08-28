@@ -8,7 +8,7 @@ from datetime import datetime
 from print_log import PrintLog
 
 warnings.filterwarnings('ignore')
-PATH = "KEEL_Cross_Folder_npz_S"
+PATH = "KEEL_Cross_Folder_npz"
 DIRS = os.listdir(PATH)         #   Get files in the folder
 
 
@@ -22,7 +22,7 @@ def evaluation(max_depth,
               colsample_bytree,
               silent =True,
               nthread = -1,
-              seed = 1234,):
+              seed = 0,):
     Num_Cross_Folders = 5
     ml_record = MetricList(Num_Cross_Folders)
     i = 0
@@ -61,14 +61,14 @@ def evaluation(max_depth,
     return ml_record.mean_G()
 
 
-parameters_bounds = {'max_depth': (5, 10),         # int
-              'learning_rate': (0.01, 0.3),
+parameters_bounds = {'max_depth': (3, 10),         # int        ###
+              'learning_rate': (0.01, 0.3),         ###
               'n_estimators': (50, 1000),       #int
-              'gamma': (0.01, 1.),
-              'min_child_weight': (2, 10),
-              'max_delta_step': (0, 0.1),
-              'subsample': (0.7, 0.8),
-              'colsample_bytree': (0.5, 0.99)}
+              'gamma': (0, 1.),                     ###
+              'min_child_weight': (1, 10),          ###
+              'max_delta_step': (0, 0.3),           ###
+              'subsample': (0.5, 1),                ###
+              'colsample_bytree': (0.5, 1)}         ###
 
 def random_search(f, para_b, num):
     begin_time = datetime.now()
