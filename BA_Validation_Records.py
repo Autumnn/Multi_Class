@@ -85,7 +85,7 @@ for Dir in DIRS:
                                           'subsample': (0.5, 1),
                                           'colsample_bytree': (0.5, 1)
                                           })
-        xgboostBO.maximize(init_points=20, n_iter=80)
+        xgboostBO.maximize(init_points=20, n_iter=30)
 
         print('-' * 53)
         print('Final Results')
