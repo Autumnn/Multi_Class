@@ -1,11 +1,12 @@
-import os
-import numpy as np
-import cma
-from datetime import datetime
+from pandas import DataFrame
 
 
-pop = 5*np.random.uniform(-1,1,(2, 10))
-print(pop[:, 1])
-zbest = pop[:,1]
-zbest.reshape(2,10)
-print(zbest-pop)
+best_result = {'RA': [1,2,3], 'BA': [6,5,4], 'GA': [8,7,9], 'CMA': [18,11,2], 'PYS': [3,14,15]}
+aaa = ['a', 'b', 'c']
+vv = DataFrame(best_result, index=aaa)
+print(vv)
+for index, row in vv.iterrows():
+    print(index)
+    ddd = row.sort_values(ascending=False)
+    print(ddd)
+    print(ddd.values)

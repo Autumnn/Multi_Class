@@ -99,42 +99,46 @@ def random_search(f, para_b, num):
 
 save_path = "KEEL_Cross_Folder_XGBoost_Para"
 
-for Dir in DIRS:
-    print("Data Set Name: ", Dir)
-    dir_path = PATH + "/" + Dir
-    files = os.listdir(dir_path)  # Get files in the folder
-    list_path = os.makedirs(save_path + '/RA_Timeline_Record_Validation/' + Dir)
-    para_path = os.makedirs(save_path + '/RA_Validation/' + Dir)
+for i_test in range(10):
 
-    for file in files:
-        name = dir_path + '/' + file
-        print("Data Set Folder: ", file)
+    for Dir in DIRS:
+        print("Data Set Name: ", Dir)
+        dir_path = PATH + "/" + Dir
+        files = os.listdir(dir_path)  # Get files in the folder
+        list_path = save_path + '/RA_Timeline_Record_Validation_' + str(i_test) + '/' + Dir
+        os.makedirs(list_path)
+        para_path = save_path + '/RA_Validation_' + str(i_test) + '/' + Dir
+        os.makedirs(para_path)
 
-        time_list, target_list, para_list = random_search(evaluation, parameters, 1)
-        max_val = max(target_list)
-        target_index = target_list.index(max_val)
-        max_params = para_list[target_index]
+        for file in files:
+            name = dir_path + '/' + file
+            print("Data Set Folder: ", file)
 
-        sub_name = file.split(".")[0]
+            time_list, target_list, para_list = random_search(evaluation, parameters, 100)
+            max_val = max(target_list)
+            target_index = target_list.index(max_val)
+            max_params = para_list[target_index]
 
-        list_file = save_path + '/RA_Timeline_Record_Validation/' + Dir + '/' + sub_name + '_RA_List.json'
-        Output_Para = []
-        for k, v in dict(zip(target_list, para_list)).items():
-            Output_Para.append({k: v})
-        Output_line = dict(zip(time_list, Output_Para))
-        with open(list_file, 'a') as outfile:
-            json.dump(Output_line, outfile, ensure_ascii=False)
-            outfile.write('\n')
+            sub_name = file.split(".")[0]
 
-        with open('RA_Opt_G_Mean_Validation_Records.txt', 'a') as w:
-            line = sub_name + '\t' + str(max_val) + '\n'
-            w.write(line)
+            list_file = list_path + '/' + sub_name + '_RA_List.json'
+            Output_Para = []
+            for k, v in dict(zip(target_list, para_list)).items():
+                Output_Para.append({k: v})
+            Output_line = dict(zip(time_list, Output_Para))
+            with open(list_file, 'a') as outfile:
+                json.dump(Output_line, outfile, ensure_ascii=False)
+                outfile.write('\n')
 
-        para_file = save_path + '/RA_Validation/' + Dir + '/' + sub_name + '_RA.json'
-        Output_Parameters = dict(zip(para_keys, max_params))
-        with open(para_file, 'a') as outfile:
-            json.dump(Output_Parameters, outfile, ensure_ascii=False)
-            outfile.write('\n')
+            with open('RA_Opt_G_Mean_Validation_Records_'+str(i_test)+'.txt', 'a') as w:
+                line = sub_name + '\t' + str(max_val) + '\n'
+                w.write(line)
+
+            para_file = para_path + '/' + sub_name + '_RA.json'
+            Output_Parameters = dict(zip(para_keys, max_params))
+            with open(para_file, 'a') as outfile:
+                json.dump(Output_Parameters, outfile, ensure_ascii=False)
+                outfile.write('\n')
 
 
 

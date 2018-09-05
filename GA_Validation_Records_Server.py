@@ -183,43 +183,46 @@ def Genetic_Algorithm():
 
 save_path = "KEEL_Cross_Folder_XGBoost_Para"
 
-for Dir in DIRS:
-    print("Data Set Name: ", Dir)
-    dir_path = PATH + "/" + Dir
-    files = os.listdir(dir_path)  # Get files in the folder
-    list_path = os.makedirs(save_path + '/GA_Timeline_Record_Validation/' + Dir)
-    para_path = os.makedirs(save_path + '/GA_Validation/' + Dir)
-#    plog = PrintLog(para_keys)
+for i_test in range(10):
+    for Dir in DIRS:
+        print("Data Set Name: ", Dir)
+        dir_path = PATH + "/" + Dir
+        files = os.listdir(dir_path)  # Get files in the folder
+        list_path = save_path + '/GA_Timeline_Record_Validation_' + str(i_test) + '/' + Dir
+        os.makedirs(list_path)
+        para_path = save_path + '/GA_Validation_' + str(i_test) + '/' + Dir
+        os.makedirs(para_path)
+    #    plog = PrintLog(para_keys)
 
-    for file in files:
-        name = dir_path + '/' + file
-        print("Data Set Folder: ", file)
-        plog = PrintLog(para_keys)
+        for file in files:
+            name = dir_path + '/' + file
+            print("Data Set Folder: ", file)
+            plog = PrintLog(para_keys)
 
-        max_params, max_val, res_records = Genetic_Algorithm()
-        print('XGBoost:')
-        print("best_values", max_val[0])
-        print("best_parameters", max_params)
+            max_params, max_val, res_records = Genetic_Algorithm()
+            print('XGBoost:')
+            print("best_values", max_val[0])
+            print("best_parameters", max_params)
 
-        sub_name = file.split(".")[0]
+            sub_name = file.split(".")[0]
 
-        with open('GA_Opt_G_Mean_Validation_Records.txt', 'a') as w:
-            line = sub_name + '\t' + str(max_val[0]) + '\n'
-            w.write(line)
+            with open('GA_Opt_G_Mean_Validation_Records_' + str(i_test) + '.txt', 'a') as w:
+                line = sub_name + '\t' + str(max_val[0]) + '\n'
+                w.write(line)
 
-        para_file = save_path + '/GA_Validation/' + Dir + '/' + sub_name + '_GA.json'
-        Output_Parameters = dict(zip(para_keys, max_params))
-        with open(para_file, 'a') as outfile:
-            json.dump(Output_Parameters, outfile, ensure_ascii=False)
-            outfile.write('\n')
+            para_file = para_path + '/' + sub_name + '_GA.json'
+            Output_Parameters = dict(zip(para_keys, max_params))
+            with open(para_file, 'a') as outfile:
+                json.dump(Output_Parameters, outfile, ensure_ascii=False)
+                outfile.write('\n')
 
-        time_list = res_records['timestamp']
-        target_list = res_records['values']
-        para_list = res_records['params']
-        list_file = save_path + '/GA_Timeline_Record_Validation/' + Dir + '/' + sub_name + '_GA_List.json'
-        Output_line = {}
-        for i in range(len(target_list)):
-            Output_line[time_list[i]] = {target_list[i]: para_list[i]}
-        with open(list_file, 'a') as outfile:
-            json.dump(Output_line, outfile, ensure_ascii=False)
-            outfile.write('\n')
+            time_list = res_records['timestamp']
+            target_list = res_records['values']
+            para_list = res_records['params']
+            list_file = list_path + '/' + sub_name + '_GA_List.json'
+            Output_line = {}
+            for i in range(len(target_list)):
+                Output_line[time_list[i]] = {target_list[i]: para_list[i]}
+            with open(list_file, 'a') as outfile:
+                json.dump(Output_line, outfile, ensure_ascii=False)
+                outfile.write('\n')

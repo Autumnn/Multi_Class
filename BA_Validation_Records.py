@@ -65,12 +65,14 @@ def xgboostcv(max_depth,
 
     return ml_record.mean_G()
 
-
+save_path = "KEEL_Cross_Folder_XGBoost_Para"
 
 for Dir in DIRS:
     print("Data Set Name: ", Dir)
     dir_path = PATH + "/" + Dir
     files = os.listdir(dir_path)  # Get files in the folder
+    list_path = os.makedirs(save_path + '/BA_Timeline_Record_Validation/' + Dir)
+    para_path = os.makedirs(save_path + '/BA_Validation/' + Dir)
     for file in files:
         name = dir_path + '/' + file
         print("Data Set Folder: ", file)
@@ -97,18 +99,20 @@ for Dir in DIRS:
             line = sub_name + '\t' + str(xgboostBO.res['max']['max_val']) + '\n'
             w.write(line)
 
-        with open(sub_name + '_BA.json', 'a') as outfile:
+        para_file = save_path + '/BA_Validation/' + Dir + '/' + sub_name + '_BA.json'
+        with open(para_file, 'a') as outfile:
             json.dump(xgboostBO.res['max']['max_params'], outfile, ensure_ascii=False)
             outfile.write('\n')
 
         time_list = xgboostBO.res['all']['timestamp']
         target_list = xgboostBO.res['all']['values']
         para_list = xgboostBO.res['all']['params']
+        list_file = save_path + '/BA_Timeline_Record_Validation/' + Dir + '/' + sub_name + '_BA_List.json'
         Output_Para = []
         for k, v in dict(zip(target_list, para_list)).items():
             Output_Para.append({k: v})
         Output_line = dict(zip(time_list, Output_Para))
-        with open(sub_name + '_BA_List.json', 'a') as outfile:
+        with open(list_file, 'a') as outfile:
             json.dump(Output_line, outfile, ensure_ascii=False)
             outfile.write('\n')
 
