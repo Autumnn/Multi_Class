@@ -100,7 +100,7 @@ for Dir in dirs:
             ml_record.measure(i, Label_test, Label_predict, 'weighted')
             i += 1
 
-        file_wirte = "Result_One_vs_All_GAOp_XGBoost_G_mean_Esemble_test.txt"
+        file_wirte = "Result_Esemble_test.txt"
         ml_record.output(file_wirte, m, Dir)
 
 

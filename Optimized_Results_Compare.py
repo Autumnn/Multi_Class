@@ -6,7 +6,7 @@ from pandas import DataFrame
 best_result = {'RA': {}, 'BA': {}, 'GA': {}, 'CMA': {}, 'PYS': {}}
 dataset_list = []
 
-path = 'Results/From_Server'
+path = 'Results/From_Server_o'
 Dir = os.listdir(path)
 for file in Dir:
     algorithm = file.split('_')[0]

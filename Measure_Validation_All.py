@@ -12,18 +12,19 @@ from imblearn.over_sampling import SMOTE
 from metrics_list import MetricList
 
 warnings.filterwarnings('ignore')
-path = "KEEL_Cross_Folder_npz"
+path = "KEEL_Cross_Folder_npz_S"
 dirs = os.listdir(path) #Get files in the folder
 #GA_Path = 'KEEL_Cross_Folder_XGBoost_Para_From_GA_Validation'
 #RA_Path = 'KEEL_Cross_Folder_XGBoost_Para_From_RA_Validation'
-Path = 'KEEL_Cross_Folder_XGBoost_Para/Server/'
+Para_Path = 'KEEL_Cross_Folder_XGBoost_Para/Server/'
 
 for Dir in dirs:
     print("Data Set Name: ", Dir)
     dir_path = path + "/" + Dir
     files = os.listdir(dir_path)  # Get files in the folder
 
-    methods = ["AdaBoost-DT", "META-DES", "MCB", "DES-MI", "XGBoost", "XGBoost-All"]
+    methods = ["AdaBoost-DT", "META-DES", "MCB", "DES-MI", "XGBoost",
+               "XGBoost-RA", "XGBoost-BA", "XGBoost-GA", "XGBoost-CMA", "XGBoost-PYS", "XGBoost-All"]
     for m in methods:
         print('Method: ', m)
         Num_Cross_Folders = 5
@@ -74,21 +75,24 @@ for Dir in dirs:
                 #                             colsample_bytree=0.5, silent=True, nthread=-1,seed=1234)
                 xgb.fit(Feature_train, Label_train.ravel())
                 Label_predict = xgb.predict(Feature_test)
-            elif m == 'XGBoost-All':
+            else:
                 sub_name = file.split('.')[0]
-                #print(sub_name)
-                RA_File = sub_name + '.json'
-                RA_Dir = Path + "/All_use/" + Dir + "/" + RA_File
-                with open(RA_Dir, 'r') as RA_OP_data:
-                    RaOp_Parameters = json.load(RA_OP_data)
-                RaOp_Parameters['silent'] = True
-                RaOp_Parameters['nthread'] = -1
-                RaOp_Parameters['seed'] = 0
+                algorithm = m.split('-')[-1]
+                if m != 'XGBoost-All':
+                    para_file = sub_name + '_' + str(algorithm) + '.json'
+                else:
+                    para_file = sub_name + '.json'
+                para_dir = Para_Path + algorithm + '_use/' + Dir + "/" + para_file
+                with open(para_dir, 'r') as op_data:
+                    Op_Parameters = json.load(op_data)
+                Op_Parameters['silent'] = True
+                Op_Parameters['nthread'] = -1
+                Op_Parameters['seed'] = 0
                 #    BayesOp_Parameters['objective'] = "multi:softprob"
-                RaOp_Parameters['max_depth'] = int(RaOp_Parameters['max_depth'])
-                RaOp_Parameters['n_estimators'] = int(RaOp_Parameters['n_estimators'])
+                Op_Parameters['max_depth'] = int(Op_Parameters['max_depth'])
+                Op_Parameters['n_estimators'] = int(Op_Parameters['n_estimators'])
 
-                xgb = xgboost.XGBClassifier(**RaOp_Parameters)
+                xgb = xgboost.XGBClassifier(**Op_Parameters)
                 xgb.fit(Feature_train, Label_train.ravel())
                 Label_predict = xgb.predict(Feature_test)
 
@@ -96,7 +100,7 @@ for Dir in dirs:
             ml_record.measure(i, Label_test, Label_predict, 'weighted')
             i += 1
 
-        file_wirte = "Result_Validation_All.txt"
+        file_wirte = "Result_Validation_Op_Compare_S.txt"
         ml_record.output(file_wirte, m, Dir)
 
 
