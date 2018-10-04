@@ -10,8 +10,8 @@ from datetime import datetime
 from print_log import PrintLog
 
 warnings.filterwarnings('ignore')
-PATH = "KEEL_Cross_Folder_Valid_npz"
-#PATH = "KEEL_Cross_Folder_npz_S"
+#PATH = "KEEL_Cross_Folder_Valid_npz"
+PATH = "KEEL_Cross_Folder_Valid_npz_PYS"
 DIRS = os.listdir(PATH)         #   Get files in the folder
 
 parameters = {'max_depth': (3, 10),         # int
@@ -140,7 +140,7 @@ def evolution_search(f, para_b):
 
 save_path = "KEEL_Cross_Folder_XGBoost_Para"
 
-for i_test in range(1, 9):
+for i_test in range(1, 2):
     for Dir in DIRS:
         print("Data Set Name: ", Dir)
         dir_path = PATH + "/" + Dir

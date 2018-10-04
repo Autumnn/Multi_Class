@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import numpy as np
+from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import StratifiedKFold
 
 
@@ -73,13 +74,19 @@ def get_feature():
 def get_label():
     return Labels
 
+save_path = "KEEL_SMOTE_npz"
+smote_size = 100
 
-path = "KEEL_Data_5_Folder"
+path = "KEEL_Data/KEEL_Data_5_Folder_S"
 files = os.listdir(path)
 for file in files:
     print('File name: ', file)
     dir = path + '/' + file
     data_dir = os.listdir(dir)
+    data_set = file.split('-')[0]
+    data_folder = save_path + '/' + data_set
+    os.makedirs(data_folder)
+
     if file == 'glass-5-fold':
         symbol = 'typeGlass'
     else:
@@ -94,22 +101,35 @@ for file in files:
         if data_name == 'tra':
             Feature_train = get_feature()
             Label_train = get_label()
+            seeds = np.random.randint(0, smote_size*100, smote_size)
+            SMOTE_feature_train_list = []
+            SMOTE_label_train_list = []
+            SMOTE_feature_valid_list = []
+            SMOTE_label_valid_list = []
+            for k in range(smote_size):
+                sm = SMOTE(random_state=seeds[k])
+                Feature_train_o, Label_train_o = sm.fit_sample(Feature_train, Label_train.ravel())
 
-            skf = StratifiedKFold(n_splits=4, shuffle=False)
-            Feature_train_list = []
-            Label_train_list = []
-            Feature_valid_list = []
-            Label_valid_list = []
-            for train_idx, valid_idx in skf.split(Feature_train, Label_train):
-                Feature_train_list.append(Feature_train[train_idx])
-                Label_train_list.append(Label_train[train_idx])
-                Feature_valid_list.append(Feature_train[valid_idx])
-                Label_valid_list.append(Label_train[valid_idx])
+                skf = StratifiedKFold(n_splits=4, shuffle=False)
+                Feature_train_list = []
+                Label_train_list = []
+                Feature_valid_list = []
+                Label_valid_list = []
+                for train_idx, valid_idx in skf.split(Feature_train_o, Label_train_o):
+                    Feature_train_list.append(Feature_train_o[train_idx])
+                    Label_train_list.append(Label_train_o[train_idx])
+                    Feature_valid_list.append(Feature_train_o[valid_idx])
+                    Label_valid_list.append(Label_train_o[valid_idx])
+
+                SMOTE_feature_train_list.append(Feature_train_list)
+                SMOTE_label_train_list.append(Label_train_list)
+                SMOTE_feature_valid_list.append(Feature_valid_list)
+                SMOTE_label_valid_list.append(Label_valid_list)
 
         elif data_name == 'tst':
             Feature_test = get_feature()
             Label_test = get_label()
-            npy_name = file.split("-")[0] + '_' + sub_name[0] + '_Cross_Folder.npz'
-            np.savez(npy_name, F_tr_l = Feature_train_list, L_tr_l = Label_train_list,
-                     F_va_l = Feature_valid_list, L_va_l = Label_valid_list,
+            npy_name = data_folder + '/' + data_set + '_' + sub_name[0] + '_Cross_Folder.npz'
+            np.savez(npy_name, S_F_tr_l = SMOTE_feature_train_list, S_L_tr_l = SMOTE_label_train_list,
+                     S_F_va_l = SMOTE_feature_valid_list, S_L_va_l = SMOTE_label_valid_list,
                      F_te = Feature_test, L_te = Label_test)

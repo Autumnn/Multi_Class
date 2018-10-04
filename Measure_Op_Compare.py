@@ -21,7 +21,8 @@ for Dir in dirs:
     dir_path = path + "/" + Dir
     files = os.listdir(dir_path)  # Get files in the folder
 
-    methods = ["XGBoost", "XGBoost-RA", "XGBoost-BA", "XGBoost-GA", "XGBoost-CMA", "XGBoost-PYS", "XGBoost-All"]
+    methods = ["XGBoost", "XGBoost-RA", "XGBoost-BA", "XGBoost-GA", "XGBoost-CMA", "XGBoost-PYS"]
+#    methods = ["XGBoost", "XGBoost-RA", "XGBoost-BA", "XGBoost-GA", "XGBoost-CMA", "XGBoost-PYS", "XGBoost-All"]
     for m in methods:
         print('Method: ', m)
         Num_Cross_Folders = 5
@@ -73,7 +74,7 @@ for Dir in dirs:
             ml_record.measure(i, Label_test, Label_predict, 'weighted')
             i += 1
 
-        file_wirte = "Result_Op_Compare_S.txt"
+        file_wirte = "Result_Op_Compare_S_without_All.txt"
         ml_record.output(file_wirte, m, Dir)
 
 

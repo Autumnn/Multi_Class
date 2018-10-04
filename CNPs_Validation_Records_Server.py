@@ -4,9 +4,12 @@ import xgboost
 import json
 import warnings
 import cma
+import tensorflow as tf
 from metrics_list import MetricList
 from datetime import datetime
 from print_log import PrintLog
+from CNPs_OP import CNPs_Optimization
+
 
 warnings.filterwarnings('ignore')
 PATH = "KEEL_Cross_Folder_Valid_npz"
@@ -71,80 +74,51 @@ def evaluate(para_value):
         ml_record.measure(i, Label_valid, Label_predict, 'weighted')
         i += 1
 
-    result = 1 - ml_record.mean_G()
+    result = ml_record.mean_G()
 
     return result
 
-def evolution_search(f, para_b):
-    begin_time = datetime.now()
-    Timestamps_list = []
-    Target_list = []
-    Parameters_list = []
-    keys = list(para_b.keys())
-    bounds = np.array(list(para_b.values()), dtype=np.float)
-    dim = len(keys)
-    plog = PrintLog(keys)
-    para_value = np.empty((1, dim))
-    plog.print_header(initialization=True)
-    for col, (lower, upper) in enumerate(bounds):
-        para_value.T[col] = np.random.RandomState().uniform(lower, upper)
-    para_value = para_value.ravel().tolist()
-    plog.print_header(initialization=False)
+save_path = "KEEL_Cross_Folder_XGBoost_Para_CNPs"
 
-    es = cma.CMAEvolutionStrategy(para_value, 0.5, {'maxiter': 2, 'popsize': 2})
-#    es = cma.CMAEvolutionStrategy(para_value, 0.5)
-    while not es.stop():
-        solutions = es.ask()
-        es.tell(solutions, [f(x) for x in solutions])
-#        es.tell(*es.ask_and_eval(f))
-#        es.disp()
-        res = es.result
-#        metric = f(**params_dic)
-        Parameters_list.append(res[0].tolist())
-        Target_list.append(1-res[1])
-        elapse_time = (datetime.now() - begin_time).total_seconds()
-        Timestamps_list.append(elapse_time)
-        # print("The best candidate: ", res[0])
-        # print("The best result: ", res[1])
-        plog.print_step(res[0], 1-res[1])
-
-    return Timestamps_list, Target_list, Parameters_list
-
-save_path = "KEEL_Cross_Folder_XGBoost_Para"
-
-for i_test in range(3, 9):
+for i_test in range(10):
     for Dir in DIRS:
         print("Data Set Name: ", Dir)
         dir_path = PATH + "/" + Dir
         files = os.listdir(dir_path)  # Get files in the folder
-        list_path = save_path + '/CMA_Timeline_Record_Validation_' + str(i_test) + '/' + Dir
-        os.makedirs(list_path)
-        para_path = save_path + '/CMA_Validation_' + str(i_test) + '/' + Dir
-        os.makedirs(para_path)
+        list_path = save_path + '/CNPs_Timeline_Record_Validation_' + str(i_test) + '/' + Dir
+        if not os.path.exists(list_path):
+            os.makedirs(list_path)
+        para_path = save_path + '/CNPs_Validation_' + str(i_test) + '/' + Dir
+        if not os.path.exists(para_path):
+            os.makedirs(para_path)
 
         for file in files:
             name = dir_path + '/' + file
             print("Data Set Folder: ", file)
             plog = PrintLog(para_keys)
 
-            time_list, target_list, para_list = evolution_search(evaluate, parameters)
+            cnps = CNPs_Optimization(evaluate, parameters)
+            cnps.maximize(num_iter=2, pop_size=3, uncertain_rate=0.2)
+            time_list = cnps.timestamps_list
+            target_list = cnps.target_list
+            para_list = cnps.parameters_list
             max_val = max(target_list)
             target_index = target_list.index(max_val)
             max_params = para_list[target_index]
 
             sub_name = file.split(".")[0]
 
-            with open('CMA_Opt_G_Mean_Validation_Records_' + str(i_test) + '.txt', 'a') as w:
+            with open('CNPs_Opt_G_Mean_Validation_Records_' + str(i_test) + '.txt', 'a') as w:
                 line = sub_name + '\t' + str(max_val) + '\n'
                 w.write(line)
 
-            para_file = para_path + '/' + sub_name + '_CMA.json'
+            para_file = para_path + '/' + sub_name + '_CNPs.json'
             Output_Parameters = dict(zip(para_keys, max_params))
             with open(para_file, 'a') as outfile:
                 json.dump(Output_Parameters, outfile, ensure_ascii=False)
                 outfile.write('\n')
 
-            list_file = list_path + '/' + sub_name + '_CMA_List.json'
+            list_file = list_path + '/' + sub_name + '_CNPs_List.json'
             Output_line = {}
             for i in range(len(target_list)):
                 Output_line[time_list[i]] = {target_list[i]: para_list[i]}
