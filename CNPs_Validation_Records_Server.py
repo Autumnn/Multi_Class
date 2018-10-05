@@ -98,7 +98,7 @@ for i_test in range(10):
             plog = PrintLog(para_keys)
 
             cnps = CNPs_Optimization(evaluate, parameters)
-            cnps.maximize(num_iter=2, pop_size=3, uncertain_rate=0.2)
+            cnps.maximize(num_iter=30, pop_size=20, uncertain_rate=0.2)
             time_list = cnps.timestamps_list
             target_list = cnps.target_list
             para_list = cnps.parameters_list

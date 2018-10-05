@@ -76,6 +76,7 @@ class CNPs_Optimization:
 
         self.plog.print_header(initialization=False)
 
+        tf.reset_default_graph()
         cnp_model = self.model_build()
         sess = tf.Session()
         train_op_and_loss = cnp_model.init_NP(learning_rate=0.001)
