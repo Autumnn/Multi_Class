@@ -99,7 +99,7 @@ def random_search(f, para_b, num):
 
 save_path = "KEEL_Cross_Folder_XGBoost_Para"
 
-for i_test in range(10):
+for i_test in range(9, 10):
 
     for Dir in DIRS:
         print("Data Set Name: ", Dir)

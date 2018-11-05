@@ -80,7 +80,7 @@ def evaluate(para_value):
 
 save_path = "KEEL_Cross_Folder_XGBoost_Para_CNPs"
 
-for i_test in range(10):
+for i_test in range(5, 10):
     for Dir in DIRS:
         print("Data Set Name: ", Dir)
         dir_path = PATH + "/" + Dir
@@ -98,7 +98,7 @@ for i_test in range(10):
             plog = PrintLog(para_keys)
 
             cnps = CNPs_Optimization(evaluate, parameters)
-            cnps.maximize(num_iter=30, pop_size=20, uncertain_rate=0.2)
+            cnps.maximize(num_iter=10, pop_size=20, uncertain_rate=0.2)
             time_list = cnps.timestamps_list
             target_list = cnps.target_list
             para_list = cnps.parameters_list

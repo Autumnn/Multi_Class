@@ -10,7 +10,7 @@ from print_log import PrintLog
 
 warnings.filterwarnings('ignore')
 PATH = "KEEL_Cross_Folder_Valid_npz"
-#PATH = "KEEL_Cross_Folder_npz_S"
+#PATH = "KEEL_Cross_Folder_Valid_npz_S"
 DIRS = os.listdir(PATH)         #   Get files in the folder
 
 parameters = {'max_depth': (3, 10),         # int
@@ -91,7 +91,7 @@ def evolution_search(f, para_b):
     para_value = para_value.ravel().tolist()
     plog.print_header(initialization=False)
 
-    es = cma.CMAEvolutionStrategy(para_value, 0.5, {'maxiter': 2, 'popsize': 2})
+    es = cma.CMAEvolutionStrategy(para_value, 0.5, {'maxiter': 30, 'popsize': 20})
 #    es = cma.CMAEvolutionStrategy(para_value, 0.5)
     while not es.stop():
         solutions = es.ask()
@@ -112,7 +112,7 @@ def evolution_search(f, para_b):
 
 save_path = "KEEL_Cross_Folder_XGBoost_Para"
 
-for i_test in range(3, 9):
+for i_test in range(8, 10):
     for Dir in DIRS:
         print("Data Set Name: ", Dir)
         dir_path = PATH + "/" + Dir

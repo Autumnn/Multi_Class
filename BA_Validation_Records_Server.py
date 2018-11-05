@@ -67,7 +67,7 @@ def xgboostcv(max_depth,
 
 save_path = "KEEL_Cross_Folder_XGBoost_Para"
 
-for i_test in range(10):
+for i_test in range(4, 10):
 
     for Dir in DIRS:
         print("Data Set Name: ", Dir)
